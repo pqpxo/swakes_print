@@ -15,11 +15,12 @@
   <img src="https://img.shields.io/badge/licence-MIT-green" alt="MIT Licence">
 </p>
 
----
 
 ## Overview
 
 SWAKES Print is a web application that runs on a Raspberry Pi and gives you a browser-based interface to design and print labels directly to a Brother QL-series label printer over USB. It also exposes a REST API so other systems can trigger prints programmatically.
+
+![Screenshot](screenshot.png)
 
 ---
 
@@ -100,7 +101,7 @@ GET  /api/print?template=QR+Code&qr_type=wifi&wifi_ssid=Net&wifi_password=pass
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/swakes-print.git
+git clone https://github.com/pqpxo/swakes-print.git
 cd swakes-print
 ```
 
