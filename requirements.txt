@@ -1,0 +1,5 @@
+Flask==3.0.2
+Pillow==10.3.0
+qrcode==7.4.2
+requests==2.31.0
+brother_ql==0.9.4

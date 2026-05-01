@@ -1,0 +1,10 @@
+{
+  "name": "Address Label",
+  "elements": [
+    {"type": "text", "field": "name",     "default": "John Doe",       "font": "DejaVuSans.ttf", "size": 36, "position": [20, 12]},
+    {"type": "text", "field": "address1", "default": "123 Main Street","font": "DejaVuSans.ttf", "size": 27, "position": [20, 62]},
+    {"type": "text", "field": "address2", "default": "",               "font": "DejaVuSans.ttf", "size": 27, "position": [20, 100]},
+    {"type": "text", "field": "city",     "default": "Nottingham",     "font": "DejaVuSans.ttf", "size": 27, "position": [20, 138]},
+    {"type": "text", "field": "postcode", "default": "NG1 1AA",        "font": "DejaVuSans.ttf", "size": 27, "position": [20, 176]}
+  ]
+}

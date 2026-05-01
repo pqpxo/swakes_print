@@ -1,0 +1,13 @@
+# Don't commit environment secrets
+.env
+*.env
+
+# Docker volumes / local data
+data/
+volumes/
+__pycache__/
+service.log
+
+
+# OS files
+.DS_Store

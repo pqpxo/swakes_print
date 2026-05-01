@@ -1,0 +1,17 @@
+{
+  "name": "ssss",
+  "elements": [
+    {
+      "type": "text",
+      "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaassss",
+      "font": "DejaVuSans.ttf",
+      "size": 32,
+      "position": [
+        330,
+        120
+      ],
+      "width": 200,
+      "height": 40
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Food Label",
+  "elements": [
+    {"type": "text", "field": "name",      "default": "Chicken Soup",          "font": "DejaVuSans.ttf", "size": 38, "position": [20, 14]},
+    {"type": "text", "field": "date_made", "default": "Made: 01/01/2026",      "font": "DejaVuSans.ttf", "size": 26, "position": [20, 72]},
+    {"type": "text", "field": "use_by",    "default": "Use By: 03/01/2026",    "font": "DejaVuSans.ttf", "size": 26, "position": [20, 114]},
+    {"type": "text", "field": "note",      "default": "Keep refrigerated",     "font": "DejaVuSans.ttf", "size": 22, "position": [20, 160]}
+  ]
+}

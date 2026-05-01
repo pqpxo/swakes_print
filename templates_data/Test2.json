@@ -1,0 +1,27 @@
+{
+  "name": "Test2",
+  "elements": [
+    {
+      "type": "image",
+      "source": "Gemini_Generated_Image_4h99sf4h99sf4h99-removebg-preview.png",
+      "position": [
+        110,
+        50
+      ],
+      "width": 240,
+      "height": 170
+    },
+    {
+      "type": "text",
+      "text": "asdasdasd",
+      "font": "DejaVuSans.ttf",
+      "size": 32,
+      "position": [
+        470,
+        100
+      ],
+      "width": 200,
+      "height": 40
+    }
+  ]
+}

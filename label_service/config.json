@@ -1,0 +1,15 @@
+{
+  "printer": {
+    "model": "QL-570",
+    "device": "usb://0x04f9:0x2042",
+    "backend": "pyusb"
+  },
+  "label": {
+    "default_size": "62x29",
+    "supported_labels": ["62x29", "29x90", "62x100", "12", "29"],
+    "canvas_width": 696,
+    "canvas_height": 271,
+    "default_font": "DejaVuSans.ttf",
+    "default_font_size": 32
+  }
+}

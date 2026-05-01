@@ -1,0 +1,98 @@
+/* ============================================
+   Editor Shared Canvas Styles
+   ============================================ */
+
+#canvas {
+  width: 100%;
+  aspect-ratio: 696 / 271;
+  position: relative;
+  background: #ffffff;
+  user-select: none;
+  overflow: hidden;
+  background-image:
+    linear-gradient(to right, #e8e8e8 1px, transparent 1px),
+    linear-gradient(to bottom, #e8e8e8 1px, transparent 1px);
+  background-size: 10px 10px;
+}
+
+.element {
+  position: absolute;
+  cursor: move;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1.5px solid transparent;
+  transition: border-color 0.1s;
+}
+
+.element:hover { border-color: rgba(79,142,247,0.4); }
+.element.selected { border-color: #4f8ef7; outline: none; }
+.element.selected::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border: 1.5px solid #4f8ef7;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.element-text {
+  font-family: sans-serif;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.2;
+  padding: 2px 4px;
+  width: 100%; height: 100%;
+  display: flex; align-items: center;
+  background: rgba(79,142,247,0.04);
+}
+
+.element-qr {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(62,207,142,0.06);
+}
+
+.element-qr svg { width: 60%; height: 60%; opacity: 0.6; }
+
+.element-image {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.resize-handle {
+  position: absolute;
+  width: 10px; height: 10px;
+  background: #4f8ef7;
+  border: 2px solid #fff;
+  border-radius: 2px;
+  z-index: 10;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.resize-se { right: -5px; bottom: -5px; cursor: se-resize; }
+.resize-sw { left: -5px; bottom: -5px; cursor: sw-resize; }
+.resize-ne { right: -5px; top: -5px; cursor: ne-resize; }
+.resize-nw { left: -5px; top: -5px; cursor: nw-resize; }
+.resize-n  { left: 50%; top: -5px; transform: translateX(-50%); cursor: n-resize; }
+.resize-s  { left: 50%; bottom: -5px; transform: translateX(-50%); cursor: s-resize; }
+.resize-e  { right: -5px; top: 50%; transform: translateY(-50%); cursor: e-resize; }
+.resize-w  { left: -5px; top: 50%; transform: translateY(-50%); cursor: w-resize; }
+
+.element-label {
+  position: absolute;
+  top: -20px; left: 0;
+  font-size: 10px;
+  background: #4f8ef7;
+  color: #fff;
+  padding: 1px 5px;
+  border-radius: 3px 3px 0 0;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s;
+}
+.element.selected .element-label { opacity: 1; }

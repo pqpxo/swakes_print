@@ -1,0 +1,944 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SWAKES Press</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+<!-- ═══════════════ HEADER ═══════════════ -->
+<header class="app-header">
+  <a href="/" class="header-brand">
+    <img src="{{ url_for('static', filename='logo.png') }}" class="brand-logo" alt="SW">
+    <div class="brand-text">
+      <span class="brand-name">SWAKES <span class="brand-subname">Press</span></span>
+      <span class="brand-sub">Configure your label and send to the Brother printer</span>
+    </div>
+  </a>
+  <div class="header-spacer"></div>
+  <button id="printer-status-btn" class="btn printer-status-btn" onclick="checkPrinterStatus()" title="Click to refresh printer status">
+    <span class="status-dot" id="status-dot"></span>
+    <span id="printer-status-text">Checking…</span>
+  </button>
+</header>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<main class="main">
+  <div class="content-grid">
+
+    <!-- ═══ LEFT: FORM ═══ -->
+    <section class="panel form-panel">
+      <form method="POST" enctype="multipart/form-data" id="label-form">
+        <input type="hidden" name="element_positions" id="element_positions" value="{}">
+        <input type="hidden" name="image_x" id="image_x" value="20">
+        <input type="hidden" name="image_y" id="image_y" value="20">
+        <input type="hidden" name="image_w" id="image_w" value="0">
+        <input type="hidden" name="image_h" id="image_h" value="0">
+
+        <!-- Template & Size -->
+        <div class="panel-section">
+          <div class="section-label">Template &amp; Size</div>
+          <div class="form-row">
+            <div class="form-group" style="flex:1">
+              <label>Template</label>
+              <div class="select-wrapper">
+                <select name="template_name" id="template_select" onchange="onTemplateChange()">
+                  <option value="">Free text</option>
+                  {% for t in templates %}
+                    <option value="{{ t.name }}">{{ t.name }}</option>
+                  {% endfor %}
+                  <option value="QR Code">QR Code</option>
+                </select>
+                <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+            <div class="form-group" style="width:100px;flex-shrink:0">
+              <label>Label Size</label>
+              <select name="label_size" id="label_size" onchange="onSizeChange()"
+                      style="width:100%;height:36px;background:#1f3054;color:#dde6f8;border:1px solid rgba(100,145,255,0.28);border-radius:6px;padding:0 8px;font-size:.875rem;font-family:'Roboto',sans-serif;cursor:pointer;appearance:none;-webkit-appearance:none;outline:none;">
+                {% for size in (config.supported_labels or ["62x29","29x90","62x100","12","29"]) %}
+                  <option value="{{ size }}"{% if size == (config.label.default_size or "62x29") %} selected{% endif %}
+                          style="background:#1f3054;color:#dde6f8;">{{ size }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- ADDRESS fields -->
+        <div class="panel-section template-fields" id="fields-address" style="display:none">
+          <div class="section-label">Address Details</div>
+
+          <div class="field-label">Name <span class="hint">(Line 1)</span></div>
+          <div class="field-row">
+            <div class="form-group"><input type="text" name="name" placeholder="e.g. John Smith" oninput="debouncedPreview()"></div>
+            <div class="field-controls">
+              <button type="button" class="bold-btn" data-field="name" onclick="toggleBold(this)" title="Bold">B</button>
+              <input type="hidden" name="bold_name" id="bold_name" value="0">
+              <input type="number" name="size_name" value="36" min="8" max="120" class="size-input-sm" oninput="debouncedPreview()" title="Font size">
+            </div>
+          </div>
+
+          <div class="field-label">Address 1 <span class="hint">(Line 2)</span></div>
+          <div class="field-row">
+            <div class="form-group"><input type="text" name="address1" placeholder="e.g. 123 Main Street" oninput="debouncedPreview()"></div>
+            <div class="field-controls">
+              <button type="button" class="bold-btn" data-field="address1" onclick="toggleBold(this)" title="Bold">B</button>
+              <input type="hidden" name="bold_address1" id="bold_address1" value="0">
+              <input type="number" name="size_address1" value="27" min="8" max="120" class="size-input-sm" oninput="debouncedPreview()" title="Font size">
+            </div>
+          </div>
+
+          <div class="field-label">Address 2 <span class="hint">(Line 3)</span></div>
+          <div class="field-row">
+            <div class="form-group"><input type="text" name="address2" placeholder="Flat / Unit (optional)" oninput="debouncedPreview()"></div>
+            <div class="field-controls">
+              <button type="button" class="bold-btn" data-field="address2" onclick="toggleBold(this)" title="Bold">B</button>
+              <input type="hidden" name="bold_address2" id="bold_address2" value="0">
+              <input type="number" name="size_address2" value="27" min="8" max="120" class="size-input-sm" oninput="debouncedPreview()" title="Font size">
+            </div>
+          </div>
+
+          <div class="field-label">City <span class="hint">(Line 4)</span></div>
+          <div class="field-row">
+            <div class="form-group"><input type="text" name="city" placeholder="e.g. Manchester" oninput="debouncedPreview()"></div>
+            <div class="field-controls">
+              <button type="button" class="bold-btn" data-field="city" onclick="toggleBold(this)" title="Bold">B</button>
+              <input type="hidden" name="bold_city" id="bold_city" value="0">
+              <input type="number" name="size_city" value="27" min="8" max="120" class="size-input-sm" oninput="debouncedPreview()" title="Font size">
+            </div>
+          </div>
+
+          <div class="field-label">Postcode <span class="hint">(Line 5)</span></div>
+          <div class="field-row">
+            <div class="form-group"><input type="text" name="postcode" placeholder="e.g. M1 1AE" oninput="debouncedPreview()"></div>
+            <div class="field-controls">
+              <button type="button" class="bold-btn" data-field="postcode" onclick="toggleBold(this)" title="Bold">B</button>
+              <input type="hidden" name="bold_postcode" id="bold_postcode" value="0">
+              <input type="number" name="size_postcode" value="27" min="8" max="120" class="size-input-sm" oninput="debouncedPreview()" title="Font size">
+            </div>
+          </div>
+        </div>
+
+        <!-- FOOD fields -->
+        <div class="panel-section template-fields" id="fields-food" style="display:none">
+          <div class="section-label">Food Details</div>
+
+          <div class="field-label">Name <span class="hint">(Line 1)</span></div>
+          <div class="field-row">
+            <div class="form-group"><input type="text" name="name" placeholder="e.g. Chicken Soup" oninput="debouncedPreview()"></div>
+            <div class="field-controls">
+              <button type="button" class="bold-btn" data-field="name" onclick="toggleBold(this)" title="Bold">B</button>
+              <input type="hidden" name="bold_name" id="bold_name_food" value="0">
+              <input type="number" name="size_name" value="38" min="8" max="120" class="size-input-sm" oninput="debouncedPreview()" title="Font size">
+            </div>
+          </div>
+
+          <div class="field-label">Date Made <span class="hint">(Line 2)</span></div>
+          <div class="field-row">
+            <div class="form-group"><input type="text" name="date_made" placeholder="e.g. 01/05/2026" oninput="debouncedPreview()"></div>
+            <div class="field-controls">
+              <button type="button" class="bold-btn" data-field="date_made" onclick="toggleBold(this)" title="Bold">B</button>
+              <input type="hidden" name="bold_date_made" id="bold_date_made" value="0">
+              <input type="number" name="size_date_made" value="26" min="8" max="120" class="size-input-sm" oninput="debouncedPreview()" title="Font size">
+            </div>
+          </div>
+
+          <div class="field-label">Use By Date <span class="hint">(Line 3)</span></div>
+          <div class="field-row">
+            <div class="form-group"><input type="text" name="use_by" placeholder="e.g. 03/05/2026" oninput="debouncedPreview()"></div>
+            <div class="field-controls">
+              <button type="button" class="bold-btn" data-field="use_by" onclick="toggleBold(this)" title="Bold">B</button>
+              <input type="hidden" name="bold_use_by" id="bold_use_by" value="0">
+              <input type="number" name="size_use_by" value="26" min="8" max="120" class="size-input-sm" oninput="debouncedPreview()" title="Font size">
+            </div>
+          </div>
+
+          <div class="field-label">Note <span class="hint">(Line 4)</span></div>
+          <div class="field-row">
+            <div class="form-group"><input type="text" name="note" placeholder="e.g. Keep refrigerated" oninput="debouncedPreview()"></div>
+            <div class="field-controls">
+              <button type="button" class="bold-btn" data-field="note" onclick="toggleBold(this)" title="Bold">B</button>
+              <input type="hidden" name="bold_note" id="bold_note" value="0">
+              <input type="number" name="size_note" value="22" min="8" max="120" class="size-input-sm" oninput="debouncedPreview()" title="Font size">
+            </div>
+          </div>
+        </div>
+
+        <!-- QR CODE fields -->
+        <div class="panel-section template-fields" id="fields-qr" style="display:none">
+          <div class="section-label">QR Code Content</div>
+          <div class="form-group">
+            <label>QR Type</label>
+            <div class="qr-type-tabs">
+              <button type="button" class="qr-tab active" data-type="website" onclick="switchQrTab(this)">🌐 Website</button>
+              <button type="button" class="qr-tab" data-type="text" onclick="switchQrTab(this)">📝 Text</button>
+              <button type="button" class="qr-tab" data-type="wifi" onclick="switchQrTab(this)">📶 WiFi</button>
+            </div>
+          </div>
+          <input type="hidden" name="qr_type" id="qr_type" value="website">
+
+          <!-- Custom label text (applies to all QR types — shown to right of QR when filled) -->
+          <div class="form-group">
+            <label>Label Text <span class="hint">(displayed beside QR — drag to reposition)</span></label>
+            <div class="field-row" style="align-items:flex-start">
+              <textarea name="qr_label_text" rows="2"
+                placeholder="e.g. Scan to Connect to WiFi&#10;Or any custom text…"
+                oninput="debouncedPreview()" style="flex:1;margin:0;resize:vertical"></textarea>
+              <div class="field-controls" style="align-items:flex-start">
+                <button type="button" class="bold-btn" data-field="qr_text" onclick="toggleBold(this)" title="Bold">B</button>
+                <input type="hidden" name="bold_qr_text" id="bold_qr_text" value="0">
+                <input type="number" name="size_qr_text" value="40" min="8" max="200" class="size-input-sm" oninput="debouncedPreview()" title="Font size">
+              </div>
+            </div>
+          </div>
+
+          <div id="qr-website">
+            <div class="form-group">
+              <label>Website URL</label>
+              <textarea name="qr_url" rows="2" placeholder="https://www.example.com" oninput="debouncedPreview()"></textarea>
+              <p style="font-size:.74rem;color:var(--text-muted);margin-top:4px">Opens in browser when scanned.</p>
+            </div>
+          </div>
+
+          <div id="qr-text" style="display:none">
+            <div class="form-group">
+              <label>Text Content</label>
+              <textarea name="qr_text_content" rows="3" placeholder="Enter any text to encode…" oninput="debouncedPreview()"></textarea>
+            </div>
+          </div>
+
+          <div id="qr-wifi" style="display:none">
+            <div class="form-group">
+              <label>Network Name (SSID)</label>
+              <div style="display:flex;gap:10px;align-items:center">
+                <input type="text" name="wifi_ssid" placeholder="Network name" style="flex:1" oninput="debouncedPreview()">
+                <div class="toggle-row" style="margin:0;flex-shrink:0">
+                  <label class="toggle">
+                    <input type="checkbox" name="wifi_hidden" id="wifi_hidden" onchange="debouncedPreview()">
+                    <span class="toggle-track"></span>
+                  </label>
+                  <span>Hidden</span>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input type="password" name="wifi_password" placeholder="Password"
+                     oninput="debouncedPreview()"
+                     autocomplete="new-password">
+            </div>
+            <div class="form-group">
+              <label>Encryption</label>
+              <div class="radio-group">
+                <label><input type="radio" name="wifi_enc" value="nopass" onchange="debouncedPreview()"> None</label>
+                <label><input type="radio" name="wifi_enc" value="WPA" checked onchange="debouncedPreview()"> WPA / WPA2</label>
+                <label><input type="radio" name="wifi_enc" value="WEP" onchange="debouncedPreview()"> WEP</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FREE TEXT fields -->
+        <div class="panel-section template-fields" id="fields-free">
+          <div class="section-label">Content</div>
+          <!-- Dynamic text fields -->
+          <div id="text-fields-container">
+            <div id="text-slot-0" class="form-group">
+              <div class="field-label">Label Text 1 <span class="hint">(drag to reposition)</span></div>
+              <div class="field-row" style="align-items:flex-start">
+                <textarea name="text" rows="2" placeholder="First line of text…" oninput="debouncedPreview()" style="flex:1;margin:0;resize:vertical"></textarea>
+                <div class="field-controls" style="align-items:flex-start">
+                  <button type="button" class="bold-btn" data-field="text" onclick="toggleBold(this)" title="Bold">B</button>
+                  <input type="hidden" name="bold_text" id="bold_text" value="0">
+                  <input type="number" name="size_text" value="{{ config.label.default_font_size }}" min="8" max="200" class="size-input-sm" oninput="debouncedPreview()" title="Font size">
+                </div>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="add-field-btn" id="add-text-field-btn" onclick="addTextField()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Text Field
+          </button>
+          <div class="form-group" style="margin-top:4px">
+            <label>Font</label>
+            <div class="select-wrapper">
+              <select name="font" onchange="debouncedPreview()">
+                <option value="{{ config.label.default_font }}">{{ config.label.default_font }} (default)</option>
+                {% for f in fonts %}<option value="{{ f }}">{{ f }}</option>{% endfor %}
+              </select>
+              <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- IMAGE SLOTS -->
+        <div class="panel-section">
+          <div class="section-label">Images <span class="hint" style="margin-left:2px">(drag &amp; resize in preview)</span></div>
+          <div id="image-slots-container"></div>
+          <button type="button" class="add-field-btn" id="add-image-btn" onclick="addImageSlot()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Image
+          </button>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="panel-actions">
+          <button type="submit" class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="18" height="10" rx="1"/><path d="M7 8V5a1 1 0 011-1h8a1 1 0 011 1v3"/><circle cx="17" cy="13" r="1" fill="currentColor"/></svg>
+            Send to Printer
+          </button>
+        </div>
+      </form>
+
+      <!-- Font upload -->
+      <div class="panel-section font-upload-section">
+        <div class="section-label">Upload Font</div>
+        <form method="POST" action="/upload_font" enctype="multipart/form-data" class="font-form">
+          <div class="file-upload compact">
+            <input type="file" name="fontfile" id="font-input" accept=".ttf,.otf">
+            <div class="file-upload-ui">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/></svg>
+              <span id="font-label">.ttf or .otf file</span>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-secondary">Upload</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ═══ RIGHT: PREVIEW + API ═══ -->
+    <section class="right-column">
+
+      <div class="panel preview-panel">
+        <div class="panel-header">
+          <h2>
+            Live Preview
+            <span class="drag-hint" id="drag-hint" style="display:none">· drag to reposition</span>
+          </h2>
+          <div class="zoom-control">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;color:var(--text-muted)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input id="zoom-slider" type="range" min="30" max="200" value="100" oninput="onZoom(this.value)">
+            <span id="zoom-val">100%</span>
+          </div>
+        </div>
+        <div class="preview-stage">
+          <div class="preview-label-wrap" id="preview-label-wrap">
+            <canvas id="preview-canvas"></canvas>
+            <div class="preview-placeholder" id="preview-placeholder">
+              <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.2">
+                <rect x="4" y="4" width="40" height="40" rx="4" stroke-dasharray="5 3"/>
+                <line x1="4" y1="18" x2="44" y2="18"/>
+                <line x1="4" y1="32" x2="44" y2="32"/>
+                <line x1="16" y1="4" x2="16" y2="44"/>
+              </svg>
+              <p>Select a template or<br>enter text to preview</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel api-panel">
+        <div class="panel-header"><h2>API Reference</h2><span class="api-badge">REST</span></div>
+        <div class="api-docs">
+          <div class="api-entry"><span class="api-method get">GET</span><code>/api/print?text=Hello&amp;size=40</code></div>
+          <div class="api-entry"><span class="api-method post">POST</span><code>/api/print</code><span class="api-note">multipart/form-data · image_file=&lt;binary&gt;</span></div>
+          <div class="api-entry"><span class="api-method post">POST</span><code>/api/print</code><span class="api-note">JSON · {"image_base64": "..."}</span></div>
+          <div class="api-entry"><span class="api-method get">GET</span><code>/api/print?image_url=https://…/img.png</code></div>
+          <div class="api-entry"><span class="api-method get">GET</span><code>/api/print?template=Address+Label&amp;name=John&amp;address1=123+Main</code></div>
+          <div class="api-entry"><span class="api-method get">GET</span><code>/api/print?template=QR+Code&amp;qr_type=wifi&amp;wifi_ssid=Net&amp;wifi_password=pass</code></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script>
+// ── Label dimension map ───────────────────────────────────────────────────
+const LABEL_DIMS = {
+  "62x29":  [696, 271],
+  "29x90":  [306, 991],
+  "62x100": [696, 1109],
+  "12":     [142, 500],
+  "29":     [306, 500]
+};
+const HANDLE_COLORS = ['#4d8eff','#34d399','#fbbf24','#f87171','#a78bfa','#38bdf8'];
+const CORNER_SIZE   = 9;
+const MIN_IMG_DIM   = 20;
+
+// ── State ─────────────────────────────────────────────────────────────────
+let labelW = 696, labelH = 271;
+let zoomScale = 1, displayScale = 1;
+let currentQrType = 'website';
+
+let elements = [], draggingEl = null, dragOffX = 0, dragOffY = 0;
+
+// ── Multi-image state ────────────────────────────────────────────────────
+let imageItems = [];         // [{slotId, htmlImg, el:{x,y,w,h}}]
+let nextImageSlotId = 0;
+let draggingImageSlot  = null;
+let imageResizeCorner  = null;
+let imgDragOffX = 0, imgDragOffY = 0, imgResizeOrigin = null;
+
+let serverPreviewImg = new Image(), serverPreviewReady = false;
+serverPreviewImg.onload = () => { serverPreviewReady = true; redraw(); };
+
+let previewTimeout = null;
+
+// ── Canvas refs ───────────────────────────────────────────────────────────
+const cvs  = () => document.getElementById('preview-canvas');
+const ctx  = () => cvs().getContext('2d');
+const phld = () => document.getElementById('preview-placeholder');
+
+function setupCanvas() {
+  const stage  = document.getElementById('preview-stage');
+  const stageW = stage ? stage.clientWidth : 0;
+  // Use the stage's inner width (minus 40px padding) as the canvas width cap
+  const maxW   = Math.max(100, Math.min(stageW > 40 ? stageW - 40 : 560, 1000));
+  const aspect = labelH / labelW;
+  const cw     = maxW;
+  const ch     = Math.round(cw * aspect);
+  displayScale = cw / labelW;
+  const c = cvs();
+  c.width  = cw; c.height = ch;
+  c.style.width  = cw + 'px';
+  c.style.height = ch + 'px';
+}
+
+function redraw() {
+  const c  = cvs(), cx = ctx();
+  cx.clearRect(0, 0, c.width, c.height);
+  cx.fillStyle = '#fff';
+  cx.fillRect(0, 0, c.width, c.height);
+
+  if (serverPreviewReady && serverPreviewImg.src) {
+    cx.drawImage(serverPreviewImg, 0, 0, c.width, c.height);
+  }
+
+  // Draw all image items
+  for (const item of imageItems) {
+    if (!item.htmlImg || !item.el) continue;
+    const s = displayScale;
+    cx.drawImage(item.htmlImg, item.el.x*s, item.el.y*s, item.el.w*s, item.el.h*s);
+    drawImageHandles(cx, s, item.el, item.slotId);
+  }
+
+  if (elements.length > 0) drawTemplateHandles(cx, displayScale);
+
+  const hasContent = serverPreviewReady || imageItems.some(i => i.htmlImg);
+  phld().style.display = (hasContent || elements.length > 0) ? 'none' : 'flex';
+}
+
+function drawTemplateHandles(cx, s) {
+  elements.forEach((el, i) => {
+    const color = HANDLE_COLORS[i % HANDLE_COLORS.length];
+    const sx = el.x*s, sy = el.y*s, sw = el.w*s, sh = el.h*s;
+    cx.save();
+    cx.fillStyle = color + '22'; cx.strokeStyle = color; cx.lineWidth = 1.5;
+    cx.setLineDash([5,3]); cx.fillRect(sx,sy,sw,sh); cx.strokeRect(sx,sy,sw,sh);
+    cx.setLineDash([]);
+    const chipH = Math.max(12, Math.min(16, sh*0.6));
+    cx.font = '600 ' + Math.round(chipH*0.66) + 'px Roboto,sans-serif';
+    const chipW = cx.measureText(el.label).width + 10;
+    cx.fillStyle = color; cx.fillRect(sx,sy,chipW,chipH);
+    cx.fillStyle = '#fff'; cx.fillText(el.label, sx+5, sy+chipH*0.75);
+    cx.restore();
+  });
+}
+
+function drawImageHandles(cx, s, el, slotId) {
+  const {x,y,w,h} = el, cs = CORNER_SIZE;
+  const sx=x*s, sy=y*s, sw=w*s, sh=h*s;
+  cx.save();
+  cx.strokeStyle = slotId === draggingImageSlot ? '#60a5fa' : '#4d8eff';
+  cx.lineWidth=1.5; cx.setLineDash([5,3]);
+  cx.strokeRect(sx,sy,sw,sh); cx.setLineDash([]);
+  [[sx,sy],[sx+sw,sy],[sx,sy+sh],[sx+sw,sy+sh]].forEach(([cx2,cy2])=>{
+    cx.fillStyle='#4d8eff'; cx.fillRect(cx2-cs/2,cy2-cs/2,cs,cs);
+    cx.strokeStyle='#fff'; cx.lineWidth=1; cx.strokeRect(cx2-cs/2,cy2-cs/2,cs,cs);
+  });
+  const lbl = 'Img ' + (slotId + 1);
+  cx.fillStyle='rgba(77,142,255,0.75)'; cx.fillRect(sx,sy,50,15);
+  cx.fillStyle='#fff'; cx.font='bold 9px Roboto,sans-serif';
+  cx.fillText(lbl,sx+4,sy+11);
+  cx.restore();
+}
+
+// ── Preview fetch ─────────────────────────────────────────────────────────
+function debouncedPreview() { clearTimeout(previewTimeout); previewTimeout = setTimeout(fetchPreview, 260); }
+
+function isInVisibleSection(el) {
+  const sec = el.closest('.template-fields');
+  if (!sec) return true;
+  return sec.style.display !== 'none';
+}
+
+function buildPreviewPayload() {
+  const tmpl  = document.getElementById('template_select').value;
+  const lsize = document.getElementById('label_size').value;
+  const payload = { template: tmpl, label_size: lsize, positions: {}, sizes: {}, bold: {} };
+
+  elements.forEach(el => { payload.positions[el.field] = [Math.round(el.x), Math.round(el.y)]; });
+
+  // Per-field sizes — only from visible sections
+  document.querySelectorAll('[name^="size_"]').forEach(inp => {
+    if (isInVisibleSection(inp)) payload.sizes[inp.name.slice(5)] = parseInt(inp.value) || 32;
+  });
+
+  // Bold flags — only from visible sections
+  document.querySelectorAll('[name^="bold_"][type="hidden"]').forEach(inp => {
+    if (isInVisibleSection(inp)) payload.bold[inp.name.slice(5)] = inp.value === '1';
+  });
+
+  // All text/select values — skip hidden sections to avoid field-name conflicts
+  document.querySelectorAll('#label-form input:not([type=hidden]):not([type=file]):not([type=radio]):not([type=checkbox]):not([name^="size_"]), #label-form textarea, #label-form select').forEach(inp => {
+    const n = inp.name;
+    if (!n || n === 'template_name' || n === 'label_size') return;
+    if (!isInVisibleSection(inp)) return;
+    payload[n] = inp.value;
+  });
+
+  // Checkboxes (WiFi hidden)
+  document.querySelectorAll('#label-form input[type=checkbox]').forEach(inp => {
+    if (inp.name && isInVisibleSection(inp)) payload[inp.name] = inp.checked ? 'true' : 'false';
+  });
+
+  // Radio buttons (WiFi enc)
+  document.querySelectorAll('#label-form input[type=radio]:checked').forEach(inp => {
+    if (inp.name && isInVisibleSection(inp)) payload[inp.name] = inp.value;
+  });
+
+  if (tmpl === 'QR Code') payload.qr_type = currentQrType;
+
+  return payload;
+}
+
+function fetchPreview() {
+  const tmpl     = document.getElementById('template_select').value;
+  const freeText = document.querySelector('[name="text"]')?.value?.trim() || '';
+  const hasSomething = tmpl || freeText;
+
+  if (!hasSomething && !imageItems.some(i => i.htmlImg)) {
+    serverPreviewReady = false; serverPreviewImg.src = '';
+    elements = []; document.getElementById('drag-hint').style.display = 'none';
+    redraw(); return;
+  }
+
+  // If only an image, just redraw client-side — no server needed
+  if (!hasSomething && imageItems.some(i => i.htmlImg)) { redraw(); return; }
+
+  fetch('/api/preview', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(buildPreviewPayload())
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.label_width)  labelW = data.label_width;
+    if (data.label_height) labelH = data.label_height;
+    setupCanvas();
+
+    if (data.elements) {
+      data.elements.forEach(srv => {
+        const ex = elements.find(e => e.field === srv.field);
+        if (ex) { srv.x = ex.x; srv.y = ex.y; }
+      });
+      elements = data.elements;
+      document.getElementById('drag-hint').style.display = elements.length > 0 ? 'inline' : 'none';
+    }
+
+    if (data.image) {
+      serverPreviewImg.src = 'data:image/png;base64,' + data.image;
+    } else {
+      serverPreviewReady = false; serverPreviewImg.src = ''; redraw();
+    }
+  })
+  .catch(() => redraw());
+}
+
+// ── Canvas events ─────────────────────────────────────────────────────────
+function setupCanvasEvents() {
+  const c = cvs();
+
+  function cpos(e) {
+    const r = c.getBoundingClientRect();
+    const cx = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+    const cy = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+    return [cx / zoomScale, cy / zoomScale];
+  }
+
+  function cornerHit(mx, my, el) {
+    const s = displayScale, tol = CORNER_SIZE + 4;
+    const {x,y,w,h} = el;
+    return [{pos:'nw',cx:x*s,cy:y*s},{pos:'ne',cx:(x+w)*s,cy:y*s},
+            {pos:'sw',cx:x*s,cy:(y+h)*s},{pos:'se',cx:(x+w)*s,cy:(y+h)*s}]
+      .find(c => Math.abs(mx-c.cx)<=tol && Math.abs(my-c.cy)<=tol) || null;
+  }
+  function imgHit(mx,my,el) {
+    const s=displayScale;
+    return mx>=el.x*s&&mx<=(el.x+el.w)*s&&my>=el.y*s&&my<=(el.y+el.h)*s;
+  }
+  function elHit(mx,my) {
+    for (let i=elements.length-1;i>=0;i--) {
+      const el=elements[i],s=displayScale;
+      if (mx>=el.x*s&&mx<=(el.x+el.w)*s&&my>=el.y*s&&my<=(el.y+el.h)*s) return el;
+    }
+    return null;
+  }
+  function hitImages(mx, my) {
+    for (let i = imageItems.length-1; i >= 0; i--) {
+      const item = imageItems[i];
+      if (!item.el) continue;
+      const corner = cornerHit(mx, my, item.el);
+      if (corner) return {item, type: 'corner', corner: corner.pos};
+      if (imgHit(mx, my, item.el)) return {item, type: 'body'};
+    }
+    return null;
+  }
+
+  c.addEventListener('mousedown', e => {
+    const [mx,my] = cpos(e);
+    const imgHitRes = hitImages(mx, my);
+    if (imgHitRes) {
+      const {item, type, corner} = imgHitRes;
+      draggingImageSlot = item.slotId;
+      if (type === 'corner') {
+        imageResizeCorner = corner; imgResizeOrigin = {...item.el};
+        imgDragOffX = mx; imgDragOffY = my;
+      } else {
+        imgDragOffX = mx - item.el.x * displayScale;
+        imgDragOffY = my - item.el.y * displayScale;
+      }
+      e.preventDefault(); return;
+    }
+    const hit = elHit(mx,my);
+    if (hit) {
+      draggingEl=hit; dragOffX=mx-hit.x*displayScale; dragOffY=my-hit.y*displayScale;
+      e.preventDefault();
+    }
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!draggingEl && draggingImageSlot === null) {
+      const r=c.getBoundingClientRect();
+      const mx=(e.clientX-r.left)/zoomScale, my=(e.clientY-r.top)/zoomScale;
+      const imgRes = hitImages(mx, my);
+      if (imgRes) {
+        c.style.cursor = imgRes.type === 'corner' ? imgRes.corner + '-resize' : 'move';
+      } else if (elHit(mx,my)) {
+        c.style.cursor = 'grab';
+      } else {
+        c.style.cursor = 'default';
+      }
+      return;
+    }
+    const r=c.getBoundingClientRect();
+    const mx=(e.clientX-r.left)/zoomScale, my=(e.clientY-r.top)/zoomScale, s=displayScale;
+
+    if (draggingEl) {
+      draggingEl.x=Math.max(0,Math.min(labelW-draggingEl.w,(mx-dragOffX)/s));
+      draggingEl.y=Math.max(0,Math.min(labelH-draggingEl.h,(my-dragOffY)/s));
+      redraw();
+    } else if (draggingImageSlot !== null) {
+      const item = imageItems.find(i => i.slotId === draggingImageSlot);
+      if (!item || !item.el) return;
+      if (imageResizeCorner) {
+        const dx=(mx-imgDragOffX)/s, dy=(my-imgDragOffY)/s, o=imgResizeOrigin;
+        let {x,y,w,h}=o;
+        if (imageResizeCorner.includes('e')) w=Math.max(MIN_IMG_DIM,w+dx);
+        if (imageResizeCorner.includes('s')) h=Math.max(MIN_IMG_DIM,h+dy);
+        if (imageResizeCorner.includes('w')) { x=Math.min(x+dx,x+w-MIN_IMG_DIM); w=o.w-(x-o.x); }
+        if (imageResizeCorner.includes('n')) { y=Math.min(y+dy,y+h-MIN_IMG_DIM); h=o.h-(y-o.y); }
+        // No position clamping — images may extend outside the label
+        item.el={x, y, w:Math.max(MIN_IMG_DIM,w), h:Math.max(MIN_IMG_DIM,h)};
+      } else {
+        // No clamping — allow free movement outside label bounds
+        item.el.x=(mx-imgDragOffX)/s;
+        item.el.y=(my-imgDragOffY)/s;
+      }
+      syncImgFields(item.slotId);
+      redraw();
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (draggingEl) { savePositions(); fetchPreview(); }
+    draggingEl=null; draggingImageSlot=null; imageResizeCorner=null; imgResizeOrigin=null;
+  });
+
+  c.addEventListener('touchstart', e => {
+    c.dispatchEvent(new MouseEvent('mousedown',{clientX:e.touches[0].clientX,clientY:e.touches[0].clientY}));
+  },{passive:false});
+  document.addEventListener('touchmove', e =>
+    document.dispatchEvent(new MouseEvent('mousemove',{clientX:e.touches[0].clientX,clientY:e.touches[0].clientY})),
+    {passive:true});
+  document.addEventListener('touchend', () => document.dispatchEvent(new MouseEvent('mouseup')));
+}
+
+function savePositions() {
+  const pos = {};
+  elements.forEach(el => { pos[el.field]=[Math.round(el.x),Math.round(el.y)]; });
+  document.getElementById('element_positions').value = JSON.stringify(pos);
+}
+
+function syncImgFields(slotId) {
+  const item = imageItems.find(i => i.slotId === slotId);
+  if (!item || !item.el) return;
+  document.getElementById(`image_x_${slotId}`).value = Math.round(item.el.x);
+  document.getElementById(`image_y_${slotId}`).value = Math.round(item.el.y);
+  document.getElementById(`image_w_${slotId}`).value = Math.round(item.el.w);
+  document.getElementById(`image_h_${slotId}`).value = Math.round(item.el.h);
+}
+
+// ── Multi-image slot management ───────────────────────────────────────────
+function addImageSlot() {
+  const slotId = nextImageSlotId++;
+  imageItems.push({slotId, htmlImg: null, el: null});
+
+  const container = document.getElementById('image-slots-container');
+  const div = document.createElement('div');
+  div.id  = `image-slot-${slotId}`;
+  div.className = 'image-slot';
+  div.innerHTML = `
+    <div class="image-slot-header">
+      <span class="image-slot-label">Image ${slotId + 1}</span>
+      <button type="button" class="remove-img-btn" onclick="removeImageSlot(${slotId})">× Remove</button>
+    </div>
+    <div class="file-upload" onclick="document.getElementById('img-input-${slotId}').click()" style="margin-bottom:0">
+      <input type="file" name="image_file_${slotId}" id="img-input-${slotId}" accept="image/*"
+             style="display:none" onchange="onImageFileSelected(${slotId},this)">
+      <div class="file-upload-ui">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <span id="file-label-${slotId}">Drop image or <u>browse</u></span>
+      </div>
+    </div>
+    <input type="hidden" name="image_x_${slotId}" id="image_x_${slotId}" value="20">
+    <input type="hidden" name="image_y_${slotId}" id="image_y_${slotId}" value="20">
+    <input type="hidden" name="image_w_${slotId}" id="image_w_${slotId}" value="0">
+    <input type="hidden" name="image_h_${slotId}" id="image_h_${slotId}" value="0">
+  `;
+  container.appendChild(div);
+}
+
+function removeImageSlot(slotId) {
+  const idx = imageItems.findIndex(i => i.slotId === slotId);
+  if (idx !== -1) imageItems.splice(idx, 1);
+  const el = document.getElementById(`image-slot-${slotId}`);
+  if (el) el.remove();
+  if (draggingImageSlot === slotId) { draggingImageSlot = null; imageResizeCorner = null; }
+  redraw();
+}
+
+function onImageFileSelected(slotId, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const lbl = document.getElementById(`file-label-${slotId}`);
+  if (lbl) lbl.textContent = file.name;
+
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const item = imageItems.find(i => i.slotId === slotId);
+      if (!item) return;
+      item.htmlImg = img;
+      const aspect = img.naturalHeight / img.naturalWidth;
+      let iw = Math.min(img.naturalWidth, labelW - 20);
+      let ih = Math.round(iw * aspect);
+      if (ih > labelH - 20) { ih = labelH - 20; iw = Math.round(ih / aspect); }
+      const offset = imageItems.indexOf(item) * 15;
+      item.el = {
+        x: Math.max(0, Math.round((labelW - iw) / 2) + offset),
+        y: Math.max(0, Math.round((labelH - ih) / 2) + offset),
+        w: iw, h: ih
+      };
+      syncImgFields(slotId);
+      redraw();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── Dynamic text field management ─────────────────────────────────────────
+const TEXT_FIELD_NAMES = ['text','text2','text3','text4','text5'];
+const TEXT_FIELD_LABELS = ['Label Text 1','Label Text 2','Label Text 3','Label Text 4','Label Text 5'];
+let usedTextSlots = new Set([0]);
+
+function addTextField() {
+  let nextSlot = -1;
+  for (let i = 0; i < TEXT_FIELD_NAMES.length; i++) {
+    if (!usedTextSlots.has(i)) { nextSlot = i; break; }
+  }
+  if (nextSlot === -1) return;
+  usedTextSlots.add(nextSlot);
+
+  const name  = TEXT_FIELD_NAMES[nextSlot];
+  const label = TEXT_FIELD_LABELS[nextSlot];
+  const div   = document.createElement('div');
+  div.id        = `text-slot-${nextSlot}`;
+  div.className = 'form-group';
+  div.innerHTML = `
+    <div class="field-label">${label}</div>
+    <div class="field-row" style="align-items:flex-start">
+      <textarea name="${name}" rows="2" placeholder="${label}…" oninput="debouncedPreview()"
+                style="flex:1;margin:0;resize:vertical"></textarea>
+      <div class="field-controls" style="align-items:flex-start">
+        <button type="button" class="bold-btn" data-field="${name}" onclick="toggleBold(this)" title="Bold">B</button>
+        <input type="hidden" name="bold_${name}" id="bold_${name}" value="0">
+        <input type="number" name="size_${name}" value="32" min="8" max="200" class="size-input-sm" oninput="debouncedPreview()" title="Font size">
+        <button type="button" class="remove-field-btn" onclick="removeTextField(${nextSlot})" title="Remove">×</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('text-fields-container').appendChild(div);
+
+  if (usedTextSlots.size >= TEXT_FIELD_NAMES.length)
+    document.getElementById('add-text-field-btn').style.display = 'none';
+
+  debouncedPreview();
+}
+
+function removeTextField(slot) {
+  const el = document.getElementById(`text-slot-${slot}`);
+  if (el) el.remove();
+  usedTextSlots.delete(slot);
+  elements = elements.filter(e => e.field !== TEXT_FIELD_NAMES[slot]);
+  document.getElementById('add-text-field-btn').style.display = 'flex';
+  debouncedPreview();
+}
+
+// ── Template / size change ────────────────────────────────────────────────
+function onTemplateChange() {
+  const val=document.getElementById('template_select').value;
+  document.querySelectorAll('.template-fields').forEach(d=>d.style.display='none');
+  elements=[]; serverPreviewReady=false; serverPreviewImg.src='';
+  document.getElementById('element_positions').value='{}';
+  document.getElementById('drag-hint').style.display='none';
+
+  if      (val==='Address Label') document.getElementById('fields-address').style.display='block';
+  else if (val==='Food Label')    document.getElementById('fields-food').style.display='block';
+  else if (val==='QR Code')       document.getElementById('fields-qr').style.display='block';
+  else                            document.getElementById('fields-free').style.display='block';
+
+  redraw();
+  fetchPreview();
+}
+
+function onSizeChange() {
+  const size=document.getElementById('label_size').value;
+  const dims=LABEL_DIMS[size]||[696,271];
+  labelW=dims[0]; labelH=dims[1];
+  // Clamp all image positions
+  for (const item of imageItems) {
+    if (!item.el) continue;
+    item.el.x=Math.min(item.el.x,labelW-item.el.w);
+    item.el.y=Math.min(item.el.y,labelH-item.el.h);
+    syncImgFields(item.slotId);
+  }
+  setupCanvas(); fetchPreview();
+}
+
+function onZoom(val) {
+  zoomScale=val/100;
+  document.getElementById('zoom-val').textContent=val+'%';
+  document.getElementById('preview-label-wrap').style.transform='scale('+zoomScale+')';
+}
+
+// ── Bold toggle ───────────────────────────────────────────────────────────
+function toggleBold(btn) {
+  const field=btn.dataset.field;
+  const active=btn.classList.toggle('active');
+  // Find hidden input in the currently visible section
+  const visibleSec=document.querySelector('.template-fields:not([style*="display: none"]):not([style*="display:none"])');
+  const hidden=visibleSec ? visibleSec.querySelector('[name="bold_'+field+'"]') : null;
+  if (hidden) hidden.value=active?'1':'0';
+  else { const h=document.getElementById('bold_'+field); if(h) h.value=active?'1':'0'; }
+  debouncedPreview();
+}
+
+// ── QR tab switch ─────────────────────────────────────────────────────────
+function switchQrTab(btn) {
+  document.querySelectorAll('.qr-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  currentQrType=btn.dataset.type;
+  document.getElementById('qr_type').value=currentQrType;
+  document.getElementById('qr-website').style.display=currentQrType==='website'?'block':'none';
+  document.getElementById('qr-text').style.display=currentQrType==='text'?'block':'none';
+  document.getElementById('qr-wifi').style.display=currentQrType==='wifi'?'block':'none';
+  debouncedPreview();
+}
+
+// ── Font upload ───────────────────────────────────────────────────────────
+document.getElementById('font-input').addEventListener('change',function(){
+  document.getElementById('font-label').textContent=this.files[0]?.name||'.ttf or .otf file';
+});
+
+// ── Form submit (AJAX — no page refresh) ─────────────────────────────────
+document.getElementById('label-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  savePositions();
+  const btn = this.querySelector('.btn-primary');
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;animation:spin 1s linear infinite"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> Sending…';
+  btn.disabled = true;
+
+  fetch('/', {
+    method: 'POST',
+    body: new FormData(this),
+    headers: {'X-Requested-With': 'XMLHttpRequest'}
+  })
+  .then(r => r.json())
+  .then(d => showToast(d.status === 'ok' ? '✓ Sent to printer!' : '✗ ' + (d.message||'Error'), d.status === 'ok' ? 'success' : 'error'))
+  .catch(() => showToast('✗ Network error — check connection', 'error'))
+  .finally(() => { btn.innerHTML = orig; btn.disabled = false; });
+});
+
+function showToast(msg, type) {
+  const t = document.createElement('div');
+  t.className = 'toast toast-' + type;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
+  setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 320); }, 3200);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+window.addEventListener('load', ()=>{
+  const initSize=document.getElementById('label_size').value;
+  const dims=LABEL_DIMS[initSize]||[696,271];
+  labelW=dims[0]; labelH=dims[1];
+  addImageSlot();  // start with one image slot
+  setupCanvas(); setupCanvasEvents(); onTemplateChange();
+  window.addEventListener('resize', ()=>{ setupCanvas(); redraw(); });
+});
+
+// ── Printer Status ─────────────────────────────────────────────────────────
+async function checkPrinterStatus() {
+  const btn  = document.getElementById('printer-status-btn');
+  const text = document.getElementById('printer-status-text');
+  try {
+    const res  = await fetch('/api/printer/status');
+    const data = await res.json();
+    btn.classList.toggle('online',  data.online);
+    btn.classList.toggle('offline', !data.online);
+    text.textContent = data.online ? 'Printer Online' : 'Printer Offline';
+  } catch {
+    btn.classList.remove('online'); btn.classList.add('offline');
+    text.textContent = 'Printer Offline';
+  }
+}
+// Check on load, then every 30 seconds
+checkPrinterStatus();
+setInterval(checkPrinterStatus, 30000);
+</script>
+</body>
+</html>

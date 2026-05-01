@@ -1,0 +1,35 @@
+#canvas {
+  width: 800px;
+  height: 300px;
+  border: 2px dashed #aaa;
+  position: relative;
+  background: white;
+  user-select: none;
+  background-image:
+    linear-gradient(to right, #eee 1px, transparent 1px),
+    linear-gradient(to bottom, #eee 1px, transparent 1px);
+  background-size: 10px 10px;
+}
+
+.element {
+  position: absolute;
+  border: 1px solid #444;
+  background: rgba(0,0,0,0.05);
+  padding: 4px;
+  cursor: move;
+  overflow: hidden;
+}
+
+.selected {
+  outline: 2px solid #007bff;
+}
+
+.resize-handle {
+  width: 10px;
+  height: 10px;
+  background: #007bff;
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  cursor: se-resize;
+}
