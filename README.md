@@ -28,7 +28,7 @@
 
 SWAKES Print is a web application that runs on a Raspberry Pi and gives you a browser-based interface to design and print labels directly to a Brother QL-series label printer over USB. It also exposes a REST API so other systems can trigger prints programmatically.
 
-![Screenshot](screenshot.png)
+![Screenshot](screenshots/screenshot.png)
 
 ![Screenshot](screenshots/screenshot2.png)
 
