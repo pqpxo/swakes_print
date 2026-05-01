@@ -1,0 +1,56 @@
+{
+  "Home WiFi": {
+    "template": "QR Code",
+    "label_size": "62x29",
+    "fields": {
+      "name": "",
+      "address1": "",
+      "address2": "",
+      "city": "",
+      "postcode": "",
+      "date_made": "",
+      "use_by": "",
+      "note": "",
+      "qr_label_text": "Scan to \nConnect",
+      "qr_url": "",
+      "qr_text_content": "",
+      "wifi_ssid": "SWKCRR1",
+      "wifi_password": "45GFbK6eBe",
+      "vcard_first": "",
+      "vcard_last": "",
+      "vcard_org": "",
+      "vcard_phone": "",
+      "vcard_email": "",
+      "vcard_url": "",
+      "text": "",
+      "font": "DejaVuSans.ttf",
+      "wifi_hidden": false,
+      "wifi_enc": "WPA"
+    },
+    "bold": {
+      "name": "0",
+      "address1": "0",
+      "address2": "0",
+      "city": "0",
+      "postcode": "0",
+      "date_made": "0",
+      "use_by": "0",
+      "note": "0",
+      "qr_text": "0",
+      "text": "0"
+    },
+    "sizes": {
+      "name": "38",
+      "address1": "27",
+      "address2": "27",
+      "city": "27",
+      "postcode": "27",
+      "date_made": "26",
+      "use_by": "26",
+      "note": "22",
+      "qr_text": "53",
+      "text": "32"
+    },
+    "qr_type": "wifi"
+  }
+}

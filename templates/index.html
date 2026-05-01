@@ -57,7 +57,177 @@
     <span class="status-dot" id="status-dot"></span>
     <span id="printer-status-text">Checking…</span>
   </button>
+  <button class="settings-cog-btn" onclick="openSettings()" title="Settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+    </svg>
+  </button>
 </header>
+
+<!-- ═══════════════ SETTINGS MODAL ═══════════════ -->
+<div class="settings-overlay" id="settings-overlay" onclick="closeSettingsIfBg(event)">
+  <div class="settings-modal" id="settings-modal">
+
+    <div class="settings-sidebar">
+      <div class="settings-modal-title">Settings</div>
+      <button class="settings-nav-btn active" data-section="appearance" onclick="switchSettingsSection(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="3"/><path d="M2 12h3M19 12h3M12 2v3M12 19v3"/></svg>
+        Appearance
+      </button>
+      <button class="settings-nav-btn" data-section="fonts" onclick="switchSettingsSection(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        Fonts
+      </button>
+      <button class="settings-nav-btn" data-section="consumables" onclick="switchSettingsSection(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        Consumables
+      </button>
+      <button class="settings-nav-btn" data-section="export" onclick="switchSettingsSection(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export
+      </button>
+      <button class="settings-nav-btn" data-section="system" onclick="switchSettingsSection(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        System
+      </button>
+      <button class="settings-close-btn" onclick="closeSettings()">✕ Close</button>
+    </div>
+
+    <div class="settings-content">
+
+      <!-- ── APPEARANCE ── -->
+      <div class="settings-section active" id="settings-appearance">
+        <h3 class="settings-section-title">Appearance</h3>
+
+        <div class="settings-field">
+          <label>App Logo</label>
+          <div class="settings-logo-row">
+            <img id="settings-logo-preview" src="{{ url_for('static', filename='logo.png') }}" class="settings-logo-img" alt="logo">
+            <div class="file-upload compact" onclick="document.getElementById('logo-input').click()" style="flex:1">
+              <input type="file" id="logo-input" accept="image/*" style="display:none">
+              <div class="file-upload-ui">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/></svg>
+                <span id="logo-upload-label">Click to replace logo</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-field">
+          <label>App Name</label>
+          <input type="text" id="settings-app-name" value="{{ settings.app_name }}" placeholder="SWAKES Press" maxlength="40">
+        </div>
+
+        <div class="settings-field">
+          <label>Subtitle</label>
+          <input type="text" id="settings-app-subtitle" value="{{ settings.app_subtitle }}" placeholder="Web interface & API…" maxlength="80">
+        </div>
+
+        <div class="settings-field">
+          <label>Accent Colour</label>
+          <div class="settings-colour-row">
+            <input type="color" id="settings-accent" value="{{ settings.accent_colour }}" oninput="previewAccent(this.value)">
+            <span class="settings-colour-val" id="settings-accent-val">{{ settings.accent_colour }}</span>
+            <div class="settings-colour-presets">
+              <button class="colour-preset" style="background:#4d8eff" onclick="setAccent('#4d8eff')" title="Blue"></button>
+              <button class="colour-preset" style="background:#34d399" onclick="setAccent('#34d399')" title="Green"></button>
+              <button class="colour-preset" style="background:#a78bfa" onclick="setAccent('#a78bfa')" title="Purple"></button>
+              <button class="colour-preset" style="background:#f87171" onclick="setAccent('#f87171')" title="Red"></button>
+              <button class="colour-preset" style="background:#fbbf24" onclick="setAccent('#fbbf24')" title="Amber"></button>
+              <button class="colour-preset" style="background:#38bdf8" onclick="setAccent('#38bdf8')" title="Cyan"></button>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary settings-save-btn" onclick="saveAppearance()">Save Appearance</button>
+      </div>
+
+      <!-- ── FONTS ── -->
+      <div class="settings-section" id="settings-fonts">
+        <h3 class="settings-section-title">Fonts</h3>
+        <p class="settings-desc">Upload custom .ttf or .otf fonts to use in your labels. Uploaded fonts appear in the Font selector on the main form.</p>
+        <div class="file-upload" onclick="document.getElementById('font-input').click()" style="margin-top:12px">
+          <input type="file" id="font-input" accept=".ttf,.otf" style="display:none">
+          <div class="file-upload-ui">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/></svg>
+            <span id="font-label">Click to select .ttf or .otf font</span>
+          </div>
+        </div>
+        <div id="installed-fonts-list" style="margin-top:14px">
+          <div class="settings-desc" style="margin-bottom:6px">Installed fonts:</div>
+          {% for f in fonts %}
+            <div class="installed-font-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+              {{ f }}
+            </div>
+          {% else %}
+            <div class="settings-desc" id="no-fonts-msg">No custom fonts installed yet.</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- ── CONSUMABLES ── -->
+      <div class="settings-section" id="settings-consumables">
+        <h3 class="settings-section-title">Consumables</h3>
+        <p class="settings-desc">Save a link to where you order replacement labels. A quick-access button will appear when a URL is saved.</p>
+        <div class="settings-field" style="margin-top:12px">
+          <label>Labels / Consumables URL</label>
+          <input type="text" id="settings-consumables-url" value="{{ settings.consumables_url }}" placeholder="https://www.amazon.co.uk/…">
+        </div>
+        <button class="btn btn-primary settings-save-btn" onclick="saveConsumables()">Save</button>
+        {% if settings.consumables_url %}
+        <a href="{{ settings.consumables_url }}" target="_blank" class="btn btn-secondary settings-save-btn" style="text-decoration:none;margin-top:6px">
+          Open Consumables Link ↗
+        </a>
+        {% endif %}
+      </div>
+
+      <!-- ── EXPORT ── -->
+      <div class="settings-section" id="settings-export">
+        <h3 class="settings-section-title">Export Configuration</h3>
+        <p class="settings-desc">Download a zip containing your printer config, saved favourites, and application settings. Use this to back up or migrate to a new device.</p>
+        <div class="settings-export-info">
+          <div class="export-file-item"><code>config.json</code> — printer &amp; label configuration</div>
+          <div class="export-file-item"><code>favourites.json</code> — saved label favourites</div>
+          <div class="export-file-item"><code>settings.json</code> — app name, colours, consumables URL</div>
+        </div>
+        <a href="/api/export" class="btn btn-primary settings-save-btn" style="text-decoration:none;margin-top:16px" download>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Export
+        </a>
+      </div>
+
+      <!-- ── SYSTEM ── -->
+      <div class="settings-section" id="settings-system">
+        <h3 class="settings-section-title">System</h3>
+        <p class="settings-desc">Control the label service running on this Raspberry Pi.</p>
+        <div class="settings-system-note">
+          <strong>Note:</strong> Restarting the service will briefly disconnect this page. Refresh after a few seconds.
+          The restart command requires <code>sudo</code> access — ensure the Pi user has passwordless sudo for <code>systemctl</code>.
+        </div>
+        <button class="btn settings-restart-btn" onclick="restartService()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          Restart Service
+        </button>
+        <div id="restart-status" class="settings-desc" style="margin-top:10px;display:none"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Mobile tab nav — only visible on small screens -->
+<nav class="mobile-tabs" id="mobile-tabs">
+  <button class="mobile-tab active" id="mob-tab-form" onclick="switchMobileTab('form')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    Form
+  </button>
+  <button class="mobile-tab" id="mob-tab-preview" onclick="switchMobileTab('preview')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    Preview
+  </button>
+</nav>
 
 <!-- ═══════════════ MAIN ═══════════════ -->
 <main class="main">
@@ -211,6 +381,7 @@
               <button type="button" class="qr-tab active" data-type="website" onclick="switchQrTab(this)">🌐 Website</button>
               <button type="button" class="qr-tab" data-type="text" onclick="switchQrTab(this)">📝 Text</button>
               <button type="button" class="qr-tab" data-type="wifi" onclick="switchQrTab(this)">📶 WiFi</button>
+              <button type="button" class="qr-tab" data-type="vcard" onclick="switchQrTab(this)">📇 vCard</button>
             </div>
           </div>
           <input type="hidden" name="qr_type" id="qr_type" value="website">
@@ -274,9 +445,36 @@
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- FREE TEXT fields -->
+          <div id="qr-vcard" style="display:none">
+            <div class="form-row">
+              <div class="form-group" style="flex:1">
+                <label>First Name</label>
+                <input type="text" name="vcard_first" placeholder="e.g. John" oninput="debouncedPreview()">
+              </div>
+              <div class="form-group" style="flex:1">
+                <label>Last Name</label>
+                <input type="text" name="vcard_last" placeholder="e.g. Smith" oninput="debouncedPreview()">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Organisation</label>
+              <input type="text" name="vcard_org" placeholder="e.g. SWAKES Ltd" oninput="debouncedPreview()">
+            </div>
+            <div class="form-group">
+              <label>Phone</label>
+              <input type="text" name="vcard_phone" placeholder="e.g. +44 7700 900000" oninput="debouncedPreview()">
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="text" name="vcard_email" placeholder="e.g. john@example.com" oninput="debouncedPreview()">
+            </div>
+            <div class="form-group">
+              <label>Website</label>
+              <input type="text" name="vcard_url" placeholder="e.g. https://example.com" oninput="debouncedPreview()">
+            </div>
+          </div>
+        </div>
         <div class="panel-section template-fields" id="fields-free">
           <div class="section-label">Content</div>
           <!-- Dynamic text fields -->
@@ -325,23 +523,31 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="18" height="10" rx="1"/><path d="M7 8V5a1 1 0 011-1h8a1 1 0 011 1v3"/><circle cx="17" cy="13" r="1" fill="currentColor"/></svg>
             Send to Printer
           </button>
+          <div class="fav-row">
+            <button type="button" class="btn fav-save-btn" onclick="showSaveFavourite()" title="Save as favourite">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Save
+            </button>
+            <div class="fav-select-wrap">
+              <select id="fav-select" onchange="loadFavourite(this.value)">
+                <option value="">Load favourite…</option>
+              </select>
+              <button type="button" class="fav-delete-btn" id="fav-delete-btn" onclick="deleteFavourite()" title="Delete selected favourite" style="display:none">✕</button>
+            </div>
+          </div>
+          <div class="fav-modal" id="fav-modal" style="display:none">
+            <div class="fav-modal-inner">
+              <label class="fav-modal-label">Name this favourite</label>
+              <input type="text" id="fav-name-input" placeholder="e.g. Office WiFi, My Address…" maxlength="60">
+              <div class="fav-modal-btns">
+                <button type="button" class="btn btn-secondary" onclick="hideSaveFavourite()">Cancel</button>
+                <button type="button" class="btn btn-primary" style="width:auto" onclick="confirmSaveFavourite()">Save</button>
+              </div>
+            </div>
+          </div>
         </div>
       </form>
 
-      <!-- Font upload -->
-      <div class="panel-section font-upload-section">
-        <div class="section-label">Upload Font</div>
-        <form method="POST" action="/upload_font" enctype="multipart/form-data" class="font-form">
-          <div class="file-upload compact">
-            <input type="file" name="fontfile" id="font-input" accept=".ttf,.otf">
-            <div class="file-upload-ui">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/></svg>
-              <span id="font-label">.ttf or .otf file</span>
-            </div>
-          </div>
-          <button type="submit" class="btn btn-secondary">Upload</button>
-        </form>
-      </div>
     </section>
 
     <!-- ═══ RIGHT: PREVIEW + API ═══ -->
@@ -1017,12 +1223,45 @@ function switchQrTab(btn) {
   document.getElementById('qr-website').style.display=currentQrType==='website'?'block':'none';
   document.getElementById('qr-text').style.display=currentQrType==='text'?'block':'none';
   document.getElementById('qr-wifi').style.display=currentQrType==='wifi'?'block':'none';
+  document.getElementById('qr-vcard').style.display=currentQrType==='vcard'?'block':'none';
   debouncedPreview();
 }
 
 // ── Font upload ───────────────────────────────────────────────────────────
-document.getElementById('font-input').addEventListener('change',function(){
-  document.getElementById('font-label').textContent=this.files[0]?.name||'.ttf or .otf file';
+document.getElementById('font-input').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  const lbl = document.getElementById('font-label');
+  lbl.textContent = 'Uploading ' + file.name + '…';
+  const fd = new FormData();
+  fd.append('fontfile', file);
+  fetch('/upload_font', {
+    method: 'POST', body: fd,
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.status === 'ok') {
+      showToast('✓ Font "' + d.filename + '" uploaded', 'success');
+      lbl.textContent = '✓ ' + d.filename + ' — click to upload another';
+      // Add to font dropdown without page reload
+      const sel = document.querySelector('[name="font"]');
+      if (sel && ![...sel.options].some(o => o.value === d.filename)) {
+        const opt = document.createElement('option');
+        opt.value = d.filename; opt.textContent = d.filename;
+        sel.appendChild(opt);
+      }
+    } else {
+      showToast('✗ ' + (d.message || 'Upload failed'), 'error');
+      lbl.textContent = 'Click to select .ttf or .otf';
+    }
+    this.value = '';
+  })
+  .catch(() => {
+    showToast('✗ Upload failed — check connection', 'error');
+    lbl.textContent = 'Click to select .ttf or .otf';
+    this.value = '';
+  });
 });
 
 // ── Form submit (AJAX — no page refresh) ─────────────────────────────────
@@ -1062,8 +1301,288 @@ window.addEventListener('load', ()=>{
   labelW=dims[0]; labelH=dims[1];
   addImageSlot();  // start with one image slot
   setupCanvas(); setupCanvasEvents(); onTemplateChange();
-  window.addEventListener('resize', ()=>{ setupCanvas(); redraw(); });
+  initMobileTabs();
+  loadFavouritesList();
 });
+
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 768) {
+    document.querySelector('.form-panel').style.display  = '';
+    document.querySelector('.right-column').style.display = '';
+  }
+  setupCanvas(); redraw();
+});
+
+// ── Mobile tabs ────────────────────────────────────────────────────────────
+function switchMobileTab(tab) {
+  const formPanel  = document.querySelector('.form-panel');
+  const rightCol   = document.querySelector('.right-column');
+  const tabForm    = document.getElementById('mob-tab-form');
+  const tabPreview = document.getElementById('mob-tab-preview');
+  if (tab === 'form') {
+    formPanel.style.display = ''; rightCol.style.display = 'none';
+    tabForm.classList.add('active'); tabPreview.classList.remove('active');
+  } else {
+    formPanel.style.display = 'none'; rightCol.style.display = '';
+    tabForm.classList.remove('active'); tabPreview.classList.add('active');
+    setupCanvas(); redraw();
+  }
+}
+function initMobileTabs() {
+  if (window.innerWidth <= 768) {
+    document.querySelector('.right-column').style.display = 'none';
+  }
+}
+
+// ── Favourites ─────────────────────────────────────────────────────────────
+function collectFormState() {
+  const state = { template: '', label_size: '', fields: {}, bold: {}, sizes: {}, qr_type: currentQrType };
+  state.template   = document.getElementById('template_select').value;
+  state.label_size = document.getElementById('label_size').value;
+  document.querySelectorAll('#label-form input:not([type=hidden]):not([type=file]):not([type=radio]):not([type=checkbox]):not([name^="size_"]), #label-form textarea, #label-form select').forEach(el => {
+    if (el.name && el.name !== 'template_name' && el.name !== 'label_size') state.fields[el.name] = el.value;
+  });
+  document.querySelectorAll('#label-form input[type=checkbox]').forEach(el => { if (el.name) state.fields[el.name] = el.checked; });
+  document.querySelectorAll('#label-form input[type=radio]:checked').forEach(el => { if (el.name) state.fields[el.name] = el.value; });
+  document.querySelectorAll('[name^="bold_"][type="hidden"]').forEach(el => { state.bold[el.name.slice(5)] = el.value; });
+  document.querySelectorAll('[name^="size_"]').forEach(el => { state.sizes[el.name.slice(5)] = el.value; });
+  return state;
+}
+function applyFormState(state) {
+  if (!state) return;
+  const tmplSel = document.getElementById('template_select');
+  if (state.template !== undefined) { tmplSel.value = state.template; onTemplateChange(); }
+  const szSel = document.getElementById('label_size');
+  if (state.label_size) { szSel.value = state.label_size; onSizeChange(); }
+  if (state.qr_type) {
+    currentQrType = state.qr_type;
+    document.getElementById('qr_type').value = state.qr_type;
+    document.querySelectorAll('.qr-tab').forEach(t => t.classList.toggle('active', t.dataset.type === state.qr_type));
+    ['website','text','wifi','vcard'].forEach(t => {
+      const el = document.getElementById('qr-' + t); if (el) el.style.display = t === state.qr_type ? 'block' : 'none';
+    });
+  }
+  if (state.fields) {
+    Object.entries(state.fields).forEach(([name, val]) => {
+      document.querySelectorAll(`[name="${name}"]`).forEach(el => {
+        if (el.type === 'checkbox') el.checked = !!val;
+        else if (el.type === 'radio') el.checked = el.value === val;
+        else el.value = val;
+      });
+    });
+  }
+  if (state.bold) {
+    Object.entries(state.bold).forEach(([field, val]) => {
+      const h = document.querySelector(`[name="bold_${field}"][type="hidden"]`); if (h) h.value = val;
+      const b = document.querySelector(`.bold-btn[data-field="${field}"]`); if (b) b.classList.toggle('active', val === '1');
+    });
+  }
+  if (state.sizes) {
+    Object.entries(state.sizes).forEach(([field, val]) => {
+      const inp = document.querySelector(`[name="size_${field}"]`); if (inp) inp.value = val;
+    });
+  }
+  debouncedPreview();
+}
+async function loadFavouritesList() {
+  try {
+    const data = await fetch('/api/favourites').then(r => r.json());
+    const sel  = document.getElementById('fav-select');
+    const cur  = sel.value;
+    sel.innerHTML = '<option value="">Load favourite…</option>';
+    Object.keys(data).sort().forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name; opt.textContent = name; sel.appendChild(opt);
+    });
+    if (cur) sel.value = cur;
+  } catch(e) {}
+}
+function loadFavourite(name) {
+  document.getElementById('fav-delete-btn').style.display = name ? 'inline-flex' : 'none';
+  if (!name) return;
+  fetch('/api/favourites').then(r => r.json()).then(data => { if (data[name]) applyFormState(data[name]); });
+}
+function showSaveFavourite() {
+  document.getElementById('fav-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('fav-name-input').focus(), 50);
+}
+function hideSaveFavourite() {
+  document.getElementById('fav-modal').style.display = 'none';
+  document.getElementById('fav-name-input').value = '';
+}
+function confirmSaveFavourite() {
+  const name = document.getElementById('fav-name-input').value.trim();
+  if (!name) { document.getElementById('fav-name-input').focus(); return; }
+  fetch('/api/favourites', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ name, state: collectFormState() })
+  }).then(r => r.json()).then(d => {
+    if (d.status === 'ok') {
+      showToast('⭐ Saved "' + name + '"', 'success');
+      loadFavouritesList().then(() => {
+        document.getElementById('fav-select').value = name;
+        document.getElementById('fav-delete-btn').style.display = 'inline-flex';
+      });
+    }
+  }).catch(() => showToast('✗ Could not save', 'error'));
+  hideSaveFavourite();
+}
+function deleteFavourite() {
+  const name = document.getElementById('fav-select').value;
+  if (!name || !confirm('Delete "' + name + '"?')) return;
+  fetch('/api/favourites/' + encodeURIComponent(name), { method: 'DELETE' })
+    .then(() => { showToast('Deleted "' + name + '"', 'success'); loadFavouritesList(); document.getElementById('fav-delete-btn').style.display = 'none'; });
+}
+document.addEventListener('keydown', e => {
+  if (document.getElementById('fav-modal').style.display === 'none') return;
+  if (e.key === 'Enter')  { e.preventDefault(); confirmSaveFavourite(); }
+  if (e.key === 'Escape') hideSaveFavourite();
+});
+
+// ── Settings modal ─────────────────────────────────────────────────────────
+function openSettings()  { document.getElementById('settings-overlay').classList.add('open'); }
+function closeSettings() { document.getElementById('settings-overlay').classList.remove('open'); }
+function closeSettingsIfBg(e) { if (e.target === document.getElementById('settings-overlay')) closeSettings(); }
+
+function switchSettingsSection(btn) {
+  document.querySelectorAll('.settings-nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('settings-' + btn.dataset.section).classList.add('active');
+}
+
+// Appearance
+function previewAccent(val) {
+  document.documentElement.style.setProperty('--accent', val);
+  // Derived values
+  document.documentElement.style.setProperty('--accent-lt', val + '1e');
+  document.documentElement.style.setProperty('--accent-glow', val + '40');
+  document.getElementById('settings-accent-val').textContent = val;
+}
+function setAccent(val) {
+  document.getElementById('settings-accent').value = val;
+  previewAccent(val);
+}
+
+function saveAppearance() {
+  const name     = document.getElementById('settings-app-name').value.trim();
+  const subtitle = document.getElementById('settings-app-subtitle').value.trim();
+  const accent   = document.getElementById('settings-accent').value;
+  fetch('/api/settings', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ app_name: name, app_subtitle: subtitle, accent_colour: accent })
+  }).then(r => r.json()).then(d => {
+    if (d.status === 'ok') {
+      // Apply live
+      document.querySelectorAll('.brand-name').forEach(el => el.childNodes[0].textContent = name.split(' ')[0] + ' ');
+      document.querySelectorAll('.brand-sub').forEach(el => el.textContent = subtitle);
+      showToast('✓ Appearance saved', 'success');
+    }
+  }).catch(() => showToast('✗ Could not save', 'error'));
+}
+
+// Logo upload
+document.getElementById('logo-input').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  document.getElementById('logo-upload-label').textContent = 'Uploading…';
+  const fd = new FormData();
+  fd.append('logo', file);
+  fetch('/api/settings/logo', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(d => {
+      if (d.status === 'ok') {
+        // Bust cache on logo images
+        const ts = Date.now();
+        document.querySelectorAll('.brand-logo, #settings-logo-preview').forEach(img => {
+          img.src = img.src.split('?')[0] + '?' + ts;
+        });
+        document.getElementById('logo-upload-label').textContent = '✓ Logo updated';
+        showToast('✓ Logo updated', 'success');
+      } else {
+        showToast('✗ ' + (d.message || 'Upload failed'), 'error');
+        document.getElementById('logo-upload-label').textContent = 'Click to replace logo';
+      }
+      this.value = '';
+    })
+    .catch(() => { showToast('✗ Upload failed', 'error'); document.getElementById('logo-upload-label').textContent = 'Click to replace logo'; });
+});
+
+// Font upload (now in settings)
+document.getElementById('font-input').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  const lbl = document.getElementById('font-label');
+  lbl.textContent = 'Uploading ' + file.name + '…';
+  const fd = new FormData();
+  fd.append('fontfile', file);
+  fetch('/upload_font', { method: 'POST', body: fd, headers: {'X-Requested-With': 'XMLHttpRequest'} })
+    .then(r => r.json())
+    .then(d => {
+      if (d.status === 'ok') {
+        showToast('✓ Font "' + d.filename + '" uploaded', 'success');
+        lbl.textContent = '✓ ' + d.filename + ' — click to upload another';
+        // Add to main form font select
+        const sel = document.querySelector('[name="font"]');
+        if (sel && ![...sel.options].some(o => o.value === d.filename)) {
+          const opt = document.createElement('option');
+          opt.value = d.filename; opt.textContent = d.filename; sel.appendChild(opt);
+        }
+        // Add to installed fonts list
+        const list = document.getElementById('installed-fonts-list');
+        const noMsg = document.getElementById('no-fonts-msg');
+        if (noMsg) noMsg.remove();
+        const item = document.createElement('div');
+        item.className = 'installed-font-item';
+        item.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg> ${d.filename}`;
+        list.appendChild(item);
+      } else {
+        showToast('✗ ' + (d.message || 'Upload failed'), 'error');
+        lbl.textContent = 'Click to select .ttf or .otf font';
+      }
+      this.value = '';
+    })
+    .catch(() => { showToast('✗ Upload failed', 'error'); lbl.textContent = 'Click to select .ttf or .otf font'; });
+});
+
+// Consumables
+function saveConsumables() {
+  const url = document.getElementById('settings-consumables-url').value.trim();
+  fetch('/api/settings', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ consumables_url: url })
+  }).then(r => r.json()).then(d => {
+    if (d.status === 'ok') showToast('✓ Consumables URL saved', 'success');
+  }).catch(() => showToast('✗ Could not save', 'error'));
+}
+
+// System restart
+function restartService() {
+  const statusEl = document.getElementById('restart-status');
+  const btn = document.querySelector('.settings-restart-btn');
+  btn.disabled = true; btn.textContent = 'Restarting…';
+  statusEl.style.display = 'block';
+  statusEl.textContent = 'Sending restart command…';
+  fetch('/api/system/restart', { method: 'POST' })
+    .then(r => r.json())
+    .then(d => {
+      statusEl.textContent = d.status === 'ok'
+        ? 'Service restarting — this page will disconnect. Refresh in a few seconds.'
+        : '✗ ' + (d.message || 'Error');
+    })
+    .catch(() => { statusEl.textContent = 'Service restarting — refresh in a few seconds.'; })
+    .finally(() => { btn.disabled = false; btn.innerHTML = btn.innerHTML.replace('Restarting…','Restart Service'); });
+}
+
+// Apply saved accent on page load
+(function() {
+  const accent = '{{ settings.accent_colour }}';
+  if (accent && accent !== '#4d8eff') {
+    document.documentElement.style.setProperty('--accent', accent);
+    document.documentElement.style.setProperty('--accent-lt', accent + '1e');
+    document.documentElement.style.setProperty('--accent-glow', accent + '40');
+  }
+})();
 
 // ── Printer Status ─────────────────────────────────────────────────────────
 async function checkPrinterStatus() {

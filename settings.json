@@ -1,0 +1,6 @@
+{
+  "app_name": "SWAKES Press",
+  "app_subtitle": "Web interface & API for printing labels to your Brother printer",
+  "accent_colour": "#4d8eff",
+  "consumables_url": "https://www.amazon.co.uk/s?k=brother+ql+570+labels"
+}

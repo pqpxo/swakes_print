@@ -210,6 +210,28 @@ def build_qr_string(params):
         hidden   = params.get("wifi_hidden")
         hidden_s = "true" if hidden in (True, "true", "on", "1") else "false"
         return "WIFI:T:%s;S:%s;P:%s;H:%s;;" % (enc, ssid, password, hidden_s)
+    if qr_type == "vcard":
+        first = (params.get("vcard_first") or "").strip()
+        last  = (params.get("vcard_last")  or "").strip()
+        full  = (first + " " + last).strip()
+        if not full:
+            return None
+        phone = (params.get("vcard_phone") or "").strip()
+        email = (params.get("vcard_email") or "").strip()
+        org   = (params.get("vcard_org")   or "").strip()
+        url   = (params.get("vcard_url")   or "").strip()
+        lines = [
+            "BEGIN:VCARD",
+            "VERSION:3.0",
+            "FN:%s" % full,
+            "N:%s;%s;;;" % (last, first),
+        ]
+        if org:   lines.append("ORG:%s" % org)
+        if phone: lines.append("TEL:%s" % phone)
+        if email: lines.append("EMAIL:%s" % email)
+        if url:   lines.append("URL:%s" % url)
+        lines.append("END:VCARD")
+        return "\n".join(lines)
     return None
 
 
@@ -512,18 +534,151 @@ def index():
             return jsonify({"status": "ok"})
         return redirect(url_for("index"))
 
-    return render_template("index.html", fonts=fonts, templates=templates, config=CONFIG)
+    return render_template("index.html", fonts=fonts, templates=templates, config=CONFIG, settings=load_settings())
 
 
 @app.route("/upload_font", methods=["POST"])
 def upload_font():
     file = request.files.get("fontfile")
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
     if not file or not file.filename:
+        if is_ajax:
+            return jsonify({"status": "error", "message": "No file received"})
         return redirect(url_for("index"))
     if not file.filename.lower().endswith((".ttf", ".otf")):
+        if is_ajax:
+            return jsonify({"status": "error", "message": "Only .ttf and .otf files are supported"})
         return "Invalid font type", 400
-    file.save(os.path.join(app.config["UPLOAD_FOLDER_FONTS"], file.filename))
+    font_dir = app.config["UPLOAD_FOLDER_FONTS"]
+    os.makedirs(font_dir, exist_ok=True)
+    save_path = os.path.join(font_dir, file.filename)
+    file.save(save_path)
+    if is_ajax:
+        return jsonify({"status": "ok", "filename": file.filename})
     return redirect(url_for("index"))
+
+
+FAVOURITES_FILE = "favourites.json"
+
+def load_favourites():
+    if os.path.exists(FAVOURITES_FILE):
+        try:
+            with open(FAVOURITES_FILE) as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+def save_favourites(favs):
+    with open(FAVOURITES_FILE, "w") as f:
+        json.dump(favs, f, indent=2)
+
+@app.route("/api/favourites", methods=["GET"])
+def get_favourites():
+    return jsonify(load_favourites())
+
+@app.route("/api/favourites", methods=["POST"])
+def save_favourite():
+    data = request.get_json()
+    name = (data.get("name") or "").strip()
+    if not name:
+        return jsonify({"status": "error", "message": "Name is required"}), 400
+    favs = load_favourites()
+    favs[name] = data.get("state", {})
+    save_favourites(favs)
+    return jsonify({"status": "ok", "name": name})
+
+@app.route("/api/favourites/<name>", methods=["DELETE"])
+def delete_favourite(name):
+    favs = load_favourites()
+    if name in favs:
+        del favs[name]
+        save_favourites(favs)
+    return jsonify({"status": "ok"})
+
+
+# ---------------------------------------------------------------------------
+# Settings
+# ---------------------------------------------------------------------------
+SETTINGS_FILE = "settings.json"
+DEFAULT_SETTINGS = {
+    "app_name":        "SWAKES Press",
+    "app_subtitle":    "Web interface & API for printing labels to your Brother printer",
+    "accent_colour":   "#4d8eff",
+    "consumables_url": "",
+}
+
+def load_settings():
+    if os.path.exists(SETTINGS_FILE):
+        try:
+            with open(SETTINGS_FILE) as f:
+                s = json.load(f)
+            # Merge with defaults so new keys always exist
+            return {**DEFAULT_SETTINGS, **s}
+        except Exception:
+            pass
+    return dict(DEFAULT_SETTINGS)
+
+def save_settings_file(data):
+    with open(SETTINGS_FILE, "w") as f:
+        json.dump(data, f, indent=2)
+
+@app.route("/api/settings", methods=["GET"])
+def get_settings():
+    return jsonify(load_settings())
+
+@app.route("/api/settings", methods=["POST"])
+def post_settings():
+    data = request.get_json() or {}
+    s = load_settings()
+    for key in DEFAULT_SETTINGS:
+        if key in data:
+            s[key] = data[key]
+    save_settings_file(s)
+    return jsonify({"status": "ok", "settings": s})
+
+@app.route("/api/settings/logo", methods=["POST"])
+def upload_logo():
+    file = request.files.get("logo")
+    if not file or not file.filename:
+        return jsonify({"status": "error", "message": "No file received"}), 400
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in (".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"):
+        return jsonify({"status": "error", "message": "Unsupported image type"}), 400
+    logo_path = os.path.join(app.static_folder, "logo.png")
+    if ext == ".png":
+        file.save(logo_path)
+    else:
+        img = Image.open(file).convert("RGBA")
+        img.save(logo_path, "PNG")
+    return jsonify({"status": "ok"})
+
+@app.route("/api/export")
+def export_data():
+    import zipfile, io as _io
+    buf = _io.BytesIO()
+    files = {
+        "config.json":      "config.json",
+        "favourites.json":  FAVOURITES_FILE,
+        "settings.json":    SETTINGS_FILE,
+    }
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for arcname, path in files.items():
+            if os.path.exists(path):
+                zf.write(path, arcname)
+    buf.seek(0)
+    from flask import send_file
+    return send_file(buf, mimetype="application/zip",
+                     as_attachment=True, download_name="swakes_press_export.zip")
+
+@app.route("/api/system/restart", methods=["POST"])
+def system_restart():
+    import subprocess
+    try:
+        subprocess.Popen(["sudo", "systemctl", "restart", "label_service"])
+        return jsonify({"status": "ok", "message": "Restart triggered"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 @app.route("/api/printer/status")
