@@ -22,6 +22,13 @@ SWAKES Print is a web application that runs on a Raspberry Pi and gives you a br
 
 ![Screenshot](screenshot.png)
 
+![Screenshot](screenshots/screenshot2.png)
+
+![Screenshot](screenshots/screenshot3.png)
+
+![Screenshot](screenshots/screenshot4.png)
+
+
 ---
 
 ## Features
