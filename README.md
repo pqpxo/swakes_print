@@ -1,8 +1,11 @@
+<!-- version 1 -->
+
 <p align="center">
   <img src="static/logo.png" alt="SWAKES Print" width="120">
 </p>
 
 <h1 align="center">SWAKES Print</h1>
+
 <p align="center">
   A self-hosted web interface and REST API for printing labels on a Brother QL-series printer from a Raspberry Pi.
 </p>
@@ -15,6 +18,11 @@
   <img src="https://img.shields.io/badge/licence-MIT-green" alt="MIT Licence">
 </p>
 
+<p align="center">
+  <a href="http://SWAKES.co.uk">SWAKES.co.uk</a>
+  &nbsp;|&nbsp;
+  <a href="https://makes.swakes.co.uk/code-with-claude-http-200-ok-my-label-printer-finally-makes-sense/">Blog Post</a>
+</p>
 
 ## Overview
 
