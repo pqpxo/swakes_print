@@ -1,4 +1,4 @@
-<!-- version 1 -->
+<!-- version 2 -->
 
 <p align="center">
   <img src="static/logo.png" alt="SWAKES Print" width="120">
@@ -14,7 +14,7 @@
   <img src="https://img.shields.io/badge/Python-3.9+-blue?logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/Flask-2.x-black?logo=flask" alt="Flask">
   <img src="https://img.shields.io/badge/Raspberry%20Pi-compatible-c51a4a?logo=raspberrypi&logoColor=white" alt="Raspberry Pi">
-  <img src="https://img.shields.io/badge/Brother-QL--570-blue" alt="Brother QL-570">
+  <img src="https://img.shields.io/badge/Brother-QL--Series-blue" alt="Brother QL Series">
   <img src="https://img.shields.io/badge/licence-MIT-green" alt="MIT Licence">
 </p>
 
@@ -24,9 +24,15 @@
   <a href="https://makes.swakes.co.uk/code-with-claude-http-200-ok-my-label-printer-finally-makes-sense/">Blog Post</a>
 </p>
 
-## Overview
+# Overview
 
-SWAKES Print is a web application that runs on a Raspberry Pi and gives you a browser-based interface to design and print labels directly to a Brother QL-series label printer over USB. It also exposes a REST API so other systems can trigger prints programmatically.
+SWAKES Print is a web application that runs on a Raspberry Pi and gives you a browser-based interface to design and print labels directly to a Brother QL-series label printer over USB, WiFi, or Ethernet. It also exposes a REST API so other systems can trigger prints programmatically.
+
+&nbsp;
+
+> **Inspired by** [`brother_ql_web`](https://github.com/pklaus/brother_ql_web) by Philipp Klaus — the original web interface for Brother QL printers. SWAKES Print was built on top of the [`brother_ql`](https://github.com/pklaus/brother_ql) library that powers it, extending the concept with a fully custom UI, REST API, favourites, print history, vCard QR support, and a settings panel.
+
+&nbsp;
 
 ![Screenshot](screenshots/screenshot.png)
 
@@ -36,17 +42,16 @@ SWAKES Print is a web application that runs on a Raspberry Pi and gives you a br
 
 ![Screenshot](screenshots/screenshot4.png)
 
+&nbsp;
 
----
-
-## Features
+# Features
 
 ### 🖨️ Label Printing
-- Print directly to a **Brother QL-570** (and compatible QL-series) over USB
+- Print to any supported **Brother QL-series** printer over USB, WiFi, or Ethernet
 - Supports multiple label sizes: `62×29mm`, `29×90mm`, `62×100mm`, `12mm`, `29mm`
 - Live label preview canvas before printing
 - Zoom control on the preview
-- Test print to verify connectivity
+- Print history — view the last 20 prints, each with a thumbnail and one-click Reprint button
 
 ### 📝 Templates
 - **Address Label** — name and up to four address lines, each independently sized and bold
@@ -77,6 +82,7 @@ SWAKES Print is a web application that runs on a Raspberry Pi and gives you a br
 - **Consumables** — save a URL to your label supplier for quick access
 - **Export** — download a zip of your full configuration (config, favourites, settings)
 - **System** — restart the label service from the browser
+- **Printer** — select your printer model, backend, and device address from the UI
 
 ### 📱 Mobile Friendly
 - Responsive layout with **Form / Preview tab switching** on small screens
@@ -95,23 +101,60 @@ GET  /api/print?template=Address+Label&name=John&address1=123+Main
 GET  /api/print?template=QR+Code&qr_type=wifi&wifi_ssid=Net&wifi_password=pass
 ```
 
----
+&nbsp;
 
-## Requirements
+# Supported Printers
+
+SWAKES Print uses the [`brother_ql`](https://github.com/pklaus/brother_ql) library and supports the following Brother QL-series printers. The printer model can be selected from **Settings → Printer** without editing any config files.
+
+| Model | Verified | Notes |
+|-------|----------|-------|
+| QL-500 | ✓ | No compression, no auto-cut |
+| QL-550 | ✓ | |
+| QL-560 | ✓ | |
+| QL-570 | ✓ | Tested model |
+| QL-580N | | |
+| QL-650TD | | |
+| QL-700 | ✓ | |
+| QL-710W | ✓ | WiFi capable |
+| QL-720NW | ✓ | WiFi/Ethernet |
+| QL-800 | ✓ | Black + red two-colour printing |
+| QL-810W | ✓ | WiFi, two-colour |
+| QL-820NWB | ✓ | WiFi/Bluetooth, two-colour |
+| QL-1050 | ✓ | Wide format (102mm) |
+| QL-1060N | ✓ | Wide format, network |
+| QL-1100 | ✓ | Wide format (102mm) |
+| QL-1110NWB | | Wide format, WiFi/Bluetooth |
+| QL-1115NWB | | Wide format, WiFi/Bluetooth |
+
+> ✓ = verified by `brother_ql` contributors. Unverified models may still work.
+
+**Connection backends supported:**
+- `pyusb` — USB connection, works cross-platform
+- `network` — WiFi or Ethernet (`tcp://192.168.x.x:9100`)
+- `linux_kernel` — USB via `/dev/usb/lp0`, Linux only
+
+> **Note:** If your printer has an **Editor Lite** mode, disable it before connecting via USB — hold the button until the LED turns off.
+
+&nbsp;
+
+# Requirements
 
 ### Hardware
 - Raspberry Pi (any model with USB; tested on Raspberry Pi 4)
-- Brother QL-570 label printer (QL-500, QL-700, QL-800 also supported with config change)
-- USB cable connecting Pi to printer
+- Any supported Brother QL-series printer (see table above)
+- USB cable (or network connection for WiFi/Ethernet models)
 
 ### Software
 - Raspberry Pi OS (Bullseye or later recommended)
 - Python 3.9+
 - `pip` and `venv`
 
----
+&nbsp;
 
-## Installation
+
+
+# Installation
 
 ### 1. Clone the repository
 
@@ -135,7 +178,7 @@ pip install flask pillow qrcode[pil] brother-ql requests pyusb
 
 ### 4. Configure the printer
 
-Edit `config.json` to match your printer and label:
+Edit `config.json` to match your printer and label, or use **Settings → Printer** in the UI after first run:
 
 ```json
 {
@@ -160,6 +203,18 @@ To find your printer's USB vendor/product ID:
 ```bash
 lsusb
 # Look for Brother Industries — e.g. ID 04f9:2042
+```
+
+For WiFi/Ethernet models, set the backend and device accordingly:
+
+```json
+{
+  "printer": {
+    "model": "QL-710W",
+    "device": "tcp://192.168.1.50:9100",
+    "backend": "network"
+  }
+}
 ```
 
 ### 5. USB permissions
@@ -191,7 +246,7 @@ python3 app.py
 
 Open your browser to `http://<pi-ip-address>:5000`
 
----
+&nbsp;
 
 ## Running as a systemd Service
 
@@ -240,9 +295,9 @@ Add:
 pi ALL=(ALL) NOPASSWD: /bin/systemctl restart label_service
 ```
 
----
+&nbsp;
 
-## Project Structure
+# Project Structure
 
 ```
 swakes-print/
@@ -251,6 +306,7 @@ swakes-print/
 ├── config.json             # Printer and label configuration
 ├── favourites.json         # Saved label favourites (auto-created)
 ├── settings.json           # App settings (auto-created)
+├── print_history.json      # Print history log (auto-created)
 ├── templates/
 │   └── index.html          # Main UI (single-page)
 ├── static/
@@ -263,23 +319,23 @@ swakes-print/
     └── food_label.json
 ```
 
----
+&nbsp;
 
-## Configuration Reference
+# Configuration Reference
 
 | Key | Description | Default |
 |-----|-------------|---------|
 | `printer.model` | Brother printer model | `QL-570` |
-| `printer.device` | USB device string | `usb://0x04f9:0x2042` |
-| `printer.backend` | Print backend | `pyusb` |
+| `printer.device` | USB or network device string | `usb://0x04f9:0x2042` |
+| `printer.backend` | Print backend (`pyusb`, `network`, `linux_kernel`) | `pyusb` |
 | `label.default_size` | Default label size | `62x29` |
 | `label.supported_labels` | Available sizes in the UI | `["62x29",...]` |
 | `label.default_font` | Font used if none selected | `DejaVuSans.ttf` |
 | `label.default_font_size` | Default text size in points | `32` |
 
----
+&nbsp;
 
-## Supported Label Sizes
+# Supported Label Sizes
 
 | Size | Pixels (W × H) | Description |
 |------|---------------|-------------|
@@ -289,30 +345,40 @@ swakes-print/
 | `12` | 142 × 500 | Thin tape |
 | `29` | 306 × 500 | Narrow label |
 
----
+> Wide format models (QL-1050, QL-1060N, QL-1100+) support additional 102mm label widths. Add the relevant sizes to `supported_labels` in `config.json` to use them.
 
-## Troubleshooting
+&nbsp;
+
+# Troubleshooting
 
 **Printer shows Offline**
 - Check the USB cable is connected and the printer is powered on
 - Verify the USB IDs in `config.json` match `lsusb` output
 - Check udev rules are applied: `sudo udevadm trigger`
+- For network printers, confirm the IP address and that port 9100 is reachable
 
 **Permission denied on USB**
 - Run `ls -la /dev/bus/usb/...` and check the device permissions
 - Ensure the udev rule is in place and the user is in the correct group
 
 **Font not appearing in dropdown after upload**
-- The font upload now lives in **Settings → Fonts**
+- Font upload lives in **Settings → Fonts**
 - After uploading, the font appears immediately in the dropdown without a page refresh
 
 **Restart button does nothing**
 - Ensure the sudoers rule is in place (see above)
 - Check the service name matches exactly: `label_service`
 
+**Print history not recording**
+- Ensure the service has write permission to the working directory
+- Check the service logs: `sudo journalctl -u label_service -n 50`
+
+**Changed printer model but nothing happened**
+- After saving in **Settings → Printer**, go to **Settings → System** and restart the service
+
 ---
 
-## Licence
+# Licence
 
 MIT — free to use, modify, and distribute. See `LICENSE` for details.
 
